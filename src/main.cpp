@@ -5,17 +5,15 @@
 int main()
 {
 	// Create the main window
-    sf::Window window(sf::VideoMode(800, 600), "SFML avec sf::Window", sf::Style::Default);
+    sf::Window window(sf::VideoMode(1080, 720), "SFML avec sf::Window", sf::Style::Default);
 
     window.setActive(true);
 
 	window.setKeyRepeatEnabled(false); // disable key repeat
 
-	// Create a graphical text to display
-    sf::CircleShape shape(100.f);
-
-	// Set the color of the circle
-    shape.setFillColor(sf::Color::Green);
+	float playerPosY = 0.0f; 
+	const float playerHeight = 0.3f;
+	const float playerSpeed = 0.1f;
 
     // run the program as long as the window is open
     while (window.isOpen())
@@ -36,40 +34,32 @@ int main()
 
             if (event.type == sf::Event::KeyPressed)
             {
-                if (event.key.code == sf::Keyboard::Right)
-                {
-                    //move the glBegin triangle to the right
-                    glTranslatef(0.1f, 0.0f, 0.0f);
-				}
-				else if (event.key.code == sf::Keyboard::Left)
+				if (event.key.code == sf::Keyboard::Up)
 				{
-					//move the glBegin triangle to the left
-					glTranslatef(-0.1f, 0.0f, 0.0f);
-				}
-				else if (event.key.code == sf::Keyboard::Up)
-				{
-					//move the glBegin triangle up
-					glTranslatef(0.0f, 0.1f, 0.0f);
+                    if (playerPosY + playerHeight + playerSpeed <= 1.0f)
+                        playerPosY += playerSpeed;
 				}
 				else if (event.key.code == sf::Keyboard::Down)
 				{
-					//move the glBegin triangle down
-					glTranslatef(0.0f, -0.1f, 0.0f);
+                    if (playerPosY - playerHeight - playerSpeed >= -1.0f)
+                        playerPosY -= playerSpeed;
 				}
             }
         }
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window
 
-        // draw a triangle
-        glBegin(GL_TRIANGLES);
+        // draw a quad
+        glBegin(GL_QUADS);
 
-		glColor3f(0.0f, 1.0f, 0.0f); // green
+		glColor3f(1.0f, 1.0f, 1.0f);  // white color
 
-		// define the vertices of the triangle
-		glVertex2f(-0.5f, -0.5f); // bottom left
-		glVertex2f(0.5f, -0.5f); // bottom right
-		glVertex2f(0.0f, 0.5f); // top
+        // Vertices for the Pong player (left side of the screen)
+        glVertex2f(-0.95f, playerPosY - playerHeight); // bottom left
+        glVertex2f(-0.95f, playerPosY + playerHeight);  // top left
+        glVertex2f(-0.90f, playerPosY + playerHeight);  // top right
+        glVertex2f(-0.90f, playerPosY - playerHeight); // bottom right
+
 
 		// end the drawing
         glEnd();
