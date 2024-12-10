@@ -19,6 +19,7 @@ int main()
                 window.close();
         }
 
+		// Clear screen
         window.clear();
         window.draw(shape);
         window.display();
