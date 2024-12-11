@@ -70,7 +70,7 @@ int main()
 
             // Detect collision with player
             if (ball.getPosition().x + ballSpeed.x <= player.getPosition().x + player.getSize().x) {
-                if (ball.getPosition().y + ballSpeed.y >= player.getPosition().y && ball.getPosition().y + ballSpeed.y <= player.getPosition().y + player.getSize().y) {
+                if (ball.getPosition().y + ball.getRadius() * 2 + ballSpeed.y >= player.getPosition().y && ball.getPosition().y + ballSpeed.y <= player.getPosition().y + player.getSize().y) {
                     ballSpeed.x = -ballSpeed.x;
                     playerScore++;
                     scoreText.setString(std::to_string(playerScore));
