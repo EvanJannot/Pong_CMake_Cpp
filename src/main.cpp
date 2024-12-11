@@ -37,20 +37,39 @@ int main()
 	sf::CircleShape ball(25.0f);
 	sf::Vector2f ballPos = { window.getSize().x / 2.0f, window.getSize().y / 2.0f };
 	ball.setPosition(ballPos.x, ballPos.y);
-	sf::Vector2f ballSpeed = { -5.0f, 0 };
+	sf::Vector2f ballSpeed = { -10.0f, 0 };
 
     while (window.isOpen())
     {
+        // Update position
+		playerPos = player.getPosition();
+		ballPos = ball.getPosition();
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player.getPosition().y - playerSpeed >= 0) {
-			player.move(0, -playerSpeed);
-			playerPos.y -= playerSpeed;
-        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player.getPosition().y + playerHeight + playerSpeed <= window.getSize().y) {
-			player.move(0, playerSpeed);
-			playerPos.y += playerSpeed;
+        // Detect collision with borders
+		if (ball.getPosition().x + ballSpeed.x <= 0) {
+			ballSpeed.x = -ballSpeed.x;
+		}
+		else if (ball.getPosition().x + ballSpeed.x + ball.getRadius() >= window.getSize().x) {
+			ballSpeed.x = -ballSpeed.x;
 		}
 
+		// Detect collision with player
+        if (ball.getPosition().x + ballSpeed.x <= player.getPosition().x + player.getSize().x) {
+            if (ball.getPosition().y + ballSpeed.y >= player.getPosition().y && ball.getPosition().y + ballSpeed.y <= player.getPosition().y + player.getSize().y) {
+                ballSpeed.x = -ballSpeed.x;
+            }
+        }
+
+        // Move the ball 
 		ball.move(ballSpeed);
+
+        // Check input
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player.getPosition().y - playerSpeed >= 0) {
+            player.move(0, -playerSpeed);
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player.getPosition().y + playerHeight + playerSpeed <= window.getSize().y) {
+            player.move(0, playerSpeed);
+        }
 
         sf::Event event;
         while (window.pollEvent(event))
