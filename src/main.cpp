@@ -57,6 +57,8 @@ int main()
         if (ball.getPosition().x + ballSpeed.x <= player.getPosition().x + player.getSize().x) {
             if (ball.getPosition().y + ballSpeed.y >= player.getPosition().y && ball.getPosition().y + ballSpeed.y <= player.getPosition().y + player.getSize().y) {
                 ballSpeed.x = -ballSpeed.x;
+                playerScore++;
+                scoreText.setString(std::to_string(playerScore));
             }
         }
 
