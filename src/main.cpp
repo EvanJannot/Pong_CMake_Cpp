@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <iostream>
+#include <cmath>
 
 int main()
 {
@@ -50,7 +51,7 @@ int main()
             playerPos = player.getPosition();
             ballPos = ball.getPosition();
 
-            // Detect collision with borders
+            // Detect collision with vertical borders
             if (ball.getPosition().x + ballSpeed.x <= 0) {
                 ballSpeed = { 0, 0 };
 				gameOver = true;
@@ -61,12 +62,43 @@ int main()
                 ballSpeed.x = -ballSpeed.x;
             }
 
+            // Detect collision with horizontal borders
+            if (ball.getPosition().y + ballSpeed.y <= 0 || ball.getPosition().y + ball.getRadius() * 2 + ballSpeed.y >= window.getSize().y)
+            {
+                ballSpeed.y = -ballSpeed.y;
+
+                float randomFactor = (std::rand() % 10 - 5) / 10.0f;
+                ballSpeed.x += randomFactor;
+
+                if (std::abs(ballSpeed.x) > 10.0f)
+                    ballSpeed.x = (ballSpeed.x > 0) ? 10.0f : -10.0f;
+                if (std::abs(ballSpeed.x) < 3.0f)
+                    ballSpeed.x = (ballSpeed.x > 0) ? 3.0f : -3.0f;
+            }
+
+			// Keep the ball inside the window
+            if (ball.getPosition().y + ball.getRadius() * 2 > window.getSize().y)
+                ball.setPosition(ball.getPosition().x, window.getSize().y - ball.getRadius() * 2);
+            if (ball.getPosition().y < 0)
+                ball.setPosition(ball.getPosition().x, 0);
+
             // Detect collision with player
             if (ball.getPosition().x + ballSpeed.x <= player.getPosition().x + player.getSize().x) {
                 if (ball.getPosition().y + ballSpeed.y >= player.getPosition().y && ball.getPosition().y + ballSpeed.y <= player.getPosition().y + player.getSize().y) {
                     ballSpeed.x = -ballSpeed.x;
                     playerScore++;
                     scoreText.setString(std::to_string(playerScore));
+
+                    float playerCenterY = player.getPosition().y + player.getSize().y / 2.0f;
+                    float ballCenterY = ball.getPosition().y + ball.getRadius();
+                    float relativeIntersectY = ballCenterY - playerCenterY;
+
+					float normalizedIntersectY = relativeIntersectY / (player.getSize().y / 2.0f);
+
+                    ballSpeed.y = normalizedIntersectY * 10.0f;
+
+                    if (std::abs(ballSpeed.x) < 5.0f)
+                        ballSpeed.x = (ballSpeed.x > 0 ? 5.0f : -5.0f);
                 }
             }
 
