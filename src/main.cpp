@@ -28,7 +28,7 @@ int main()
     // Player definition
 	const float playerHeight = 150.0f;
 	const float playerSpeed = 10.0f;
-	sf::Vector2f playerPos = { 50.0f, window.getSize().y - playerHeight };
+	sf::Vector2f playerPos = { 50.0f, window.getSize().y / 2.0f };
 	sf::RectangleShape player(sf::Vector2f(50, playerHeight));
 	player.setFillColor(sf::Color::White);
 	player.setPosition(playerPos.x, playerPos.y);
@@ -39,38 +39,47 @@ int main()
 	ball.setPosition(ballPos.x, ballPos.y);
 	sf::Vector2f ballSpeed = { -10.0f, 0 };
 
+    // Game state
+    bool gameOver = false;
+
     while (window.isOpen())
     {
-        // Update position
-		playerPos = player.getPosition();
-		ballPos = ball.getPosition();
 
-        // Detect collision with borders
-		if (ball.getPosition().x + ballSpeed.x <= 0) {
-			ballSpeed.x = -ballSpeed.x;
-		}
-		else if (ball.getPosition().x + ballSpeed.x + ball.getRadius() >= window.getSize().x) {
-			ballSpeed.x = -ballSpeed.x;
-		}
+        if (!gameOver) {
+            // Update position
+            playerPos = player.getPosition();
+            ballPos = ball.getPosition();
 
-		// Detect collision with player
-        if (ball.getPosition().x + ballSpeed.x <= player.getPosition().x + player.getSize().x) {
-            if (ball.getPosition().y + ballSpeed.y >= player.getPosition().y && ball.getPosition().y + ballSpeed.y <= player.getPosition().y + player.getSize().y) {
-                ballSpeed.x = -ballSpeed.x;
-                playerScore++;
-                scoreText.setString(std::to_string(playerScore));
+            // Detect collision with borders
+            if (ball.getPosition().x + ballSpeed.x <= 0) {
+                ballSpeed = { 0, 0 };
+				gameOver = true;
+                scoreText.setString("Game Over");
+                scoreText.setPosition(window.getSize().x / 2.0f - 200, 0);
             }
-        }
+            else if (ball.getPosition().x + ballSpeed.x + ball.getRadius() >= window.getSize().x) {
+                ballSpeed.x = -ballSpeed.x;
+            }
 
-        // Move the ball 
-		ball.move(ballSpeed);
+            // Detect collision with player
+            if (ball.getPosition().x + ballSpeed.x <= player.getPosition().x + player.getSize().x) {
+                if (ball.getPosition().y + ballSpeed.y >= player.getPosition().y && ball.getPosition().y + ballSpeed.y <= player.getPosition().y + player.getSize().y) {
+                    ballSpeed.x = -ballSpeed.x;
+                    playerScore++;
+                    scoreText.setString(std::to_string(playerScore));
+                }
+            }
 
-        // Check input
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player.getPosition().y - playerSpeed >= 0) {
-            player.move(0, -playerSpeed);
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player.getPosition().y + playerHeight + playerSpeed <= window.getSize().y) {
-            player.move(0, playerSpeed);
+            // Move the ball 
+            ball.move(ballSpeed);
+
+            // Check input
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player.getPosition().y - playerSpeed >= 0) {
+                player.move(0, -playerSpeed);
+            }
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player.getPosition().y + playerHeight + playerSpeed <= window.getSize().y) {
+                player.move(0, playerSpeed);
+            }       
         }
 
         sf::Event event;
