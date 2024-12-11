@@ -1,21 +1,27 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
+#include <iostream>
 
 int main()
 {
-	// Create the main window
-    sf::Window window(sf::VideoMode(1080, 720), "SFML avec sf::Window", sf::Style::Default);
+    sf::RenderWindow window(sf::VideoMode(1080, 750), "Pong SFML", sf::Style::Default);
+    window.setFramerateLimit(30);
 
     window.setActive(true);
 
-	window.setKeyRepeatEnabled(false); // disable key repeat
+	window.setKeyRepeatEnabled(false); 
+	
+	const float playerHeight = 150.0f;
+	const float playerSpeed = 50.0f;
 
-	float playerPosY = 0.0f; 
-	const float playerHeight = 0.3f;
-	const float playerSpeed = 0.1f;
+    float playerPosY = window.getSize().y - playerHeight;
+    float playerPosX = 50.0f;
 
-    // run the program as long as the window is open
+	sf::RectangleShape player(sf::Vector2f(50, playerHeight));
+	player.setFillColor(sf::Color::White);
+	player.setPosition(playerPosX, playerPosY);
+
     while (window.isOpen())
     {
         // check all the window's events that were triggered since the last iteration of the loop
@@ -36,33 +42,26 @@ int main()
             {
 				if (event.key.code == sf::Keyboard::Up)
 				{
-                    if (playerPosY + playerHeight + playerSpeed <= 1.0f)
-                        playerPosY += playerSpeed;
+                    if (player.getPosition().y - playerSpeed >= 0)
+                    {
+                        playerPosY -= playerSpeed;
+                        player.setPosition(playerPosX, playerPosY);
+                    }
+                        
 				}
 				else if (event.key.code == sf::Keyboard::Down)
 				{
-                    if (playerPosY - playerHeight - playerSpeed >= -1.0f)
-                        playerPosY -= playerSpeed;
+                    if (player.getPosition().y + playerHeight + playerSpeed  <= window.getSize().y)
+                    {
+                        playerPosY += playerSpeed;
+                        player.setPosition(playerPosX, playerPosY);
+                    }
 				}
             }
         }
+        window.clear();
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window
-
-        // draw a quad
-        glBegin(GL_QUADS);
-
-		glColor3f(1.0f, 1.0f, 1.0f);  // white color
-
-        // Vertices for the Pong player (left side of the screen)
-        glVertex2f(-0.95f, playerPosY - playerHeight); // bottom left
-        glVertex2f(-0.95f, playerPosY + playerHeight);  // top left
-        glVertex2f(-0.90f, playerPosY + playerHeight);  // top right
-        glVertex2f(-0.90f, playerPosY - playerHeight); // bottom right
-
-
-		// end the drawing
-        glEnd();
+        window.draw(player);
 
         window.display();
     }
