@@ -19,6 +19,10 @@ const float minSpeedIncrease = 0.5f;
 const float maxSpeedIncrease = 1.1f;
 // Font
 const int fontSize = 100;
+// Dashed line
+const float dashWidth = 5.0f;
+const float dashHeight = 20.0f;
+const float dashSpacing = 10.0f;
 
 // Move the ball 
 void updateBallPosition(sf::CircleShape& ball, sf::Vector2f& ballSpeed) {
@@ -180,6 +184,15 @@ int main()
 
         // Render
         window.clear();
+
+        // Draw the dashed line
+        for (float y = 0; y < windowHeight; y += dashHeight + dashSpacing) {
+            sf::RectangleShape dash(sf::Vector2f(dashWidth, dashHeight));
+            dash.setPosition(windowWidth / 2.0f - dashWidth / 2.0f, y);
+            window.draw(dash);
+        }
+
+        // Draw other elements
         window.draw(score1Text);
 		window.draw(score2Text);
         window.draw(player1);
