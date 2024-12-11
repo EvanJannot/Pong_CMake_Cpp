@@ -1,6 +1,5 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
-#include <SFML/OpenGL.hpp>
 #include <iostream>
 
 int main()
@@ -9,10 +8,26 @@ int main()
     window.setFramerateLimit(30);
     window.setActive(true);
 	window.setKeyRepeatEnabled(false); 
+
+    //Font definition
+    sf::Font font;
+    if (!font.loadFromFile("assets/fonts/bit5x3.ttf"))
+    {
+        std::cerr << "Erreur : Impossible de charger la police assets/fonts/bit5x3.ttf" << std::endl;
+        return -1;
+    }
+
+    // Score definition
+	int playerScore = 0;
+	sf::Text scoreText("",font);
+    scoreText.setString(std::to_string(playerScore));
+    scoreText.setCharacterSize(100);
+    scoreText.setColor(sf::Color::White);
+	scoreText.setPosition(window.getSize().x / 2.0f, 0);
 	
     // Player definition
 	const float playerHeight = 150.0f;
-	const float playerSpeed = 50.0f;
+	const float playerSpeed = 10.0f;
 	sf::Vector2f playerPos = { 50.0f, window.getSize().y - playerHeight };
 	sf::RectangleShape player(sf::Vector2f(50, playerHeight));
 	player.setFillColor(sf::Color::White);
@@ -22,40 +37,32 @@ int main()
 	sf::CircleShape ball(25.0f);
 	sf::Vector2f ballPos = { window.getSize().x / 2.0f, window.getSize().y / 2.0f };
 	ball.setPosition(ballPos.x, ballPos.y);
+	sf::Vector2f ballSpeed = { -5.0f, 0 };
 
     while (window.isOpen())
     {
-        // check all the window's events that were triggered since the last iteration of the loop
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player.getPosition().y - playerSpeed >= 0) {
+			player.move(0, -playerSpeed);
+			playerPos.y -= playerSpeed;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player.getPosition().y + playerHeight + playerSpeed <= window.getSize().y) {
+			player.move(0, playerSpeed);
+			playerPos.y += playerSpeed;
+		}
+
+		ball.move(ballSpeed);
+
         sf::Event event;
         while (window.pollEvent(event))
         {
-            // "close requested" event: we close the window
             if (event.type == sf::Event::Closed)
                 window.close();
-
-			if (event.type == sf::Event::KeyPressed)
-			{
-				if (event.key.code == sf::Keyboard::Escape)
-					window.close();
-			}
-
-            if (event.type == sf::Event::KeyPressed)
-            {
-                if (event.key.code == sf::Keyboard::Up && player.getPosition().y - playerSpeed >= 0)
-                {
-                    playerPos.y -= playerSpeed;
-                    player.setPosition(playerPos.x, playerPos.y);
-                }
-                else if (event.key.code == sf::Keyboard::Down && player.getPosition().y + playerHeight + playerSpeed <= window.getSize().y)
-                {
-                    playerPos.y += playerSpeed;
-                    player.setPosition(playerPos.x, playerPos.y);
-                }
-            }
         }
 
+        // Render
         window.clear();
 
+		window.draw(scoreText);
         window.draw(player);
 		window.draw(ball);
 

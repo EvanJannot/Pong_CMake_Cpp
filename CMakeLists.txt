@@ -14,7 +14,7 @@ FetchContent_Declare(SFML
 FetchContent_MakeAvailable(SFML)
 
 add_executable(main src/main.cpp)
-target_link_libraries(main PRIVATE sfml-graphics)
+target_link_libraries(main PRIVATE sfml-graphics sfml-window sfml-system)
 target_compile_features(main PRIVATE cxx_std_17)
 
 if(WIN32)
@@ -24,3 +24,12 @@ if(WIN32)
         PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:main>
         VERBATIM)
 endif()
+
+# Ajouter la copie de ressources (ex. bit5x3.ttf)
+set(RESOURCES_DIR ${CMAKE_SOURCE_DIR}/assets)
+
+# Copier tous les fichiers dans le répertoire de build
+file(COPY ${RESOURCES_DIR} DESTINATION ${CMAKE_BINARY_DIR}/bin)
+
+# Conseiller de structurer les ressources
+message(STATUS "Assurez-vous de placer vos ressources dans ${RESOURCES_DIR}")
