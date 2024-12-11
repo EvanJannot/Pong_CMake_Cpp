@@ -4,85 +4,93 @@
 #include <cmath>
 
 // Constants
+// Window
+const int windowWidth = 1080;
+const int windowHeight = 750;
 // Player
 const float playerHeight = 150.0f;
+const float playerWidth = 50.0f;
 const float playerSpeed = 15.0f;
 // Ball
 const float ballRadius = 25.0f;
+const float initialBallSpeedX = -10.0f;
 const float maxBallSpeed = 20.0f;
 const float minSpeedIncrease = 0.5f;
 const float maxSpeedIncrease = 1.1f;
+// Font
+const int fontSize = 100;
 
 // Move the ball 
 void updateBallPosition(sf::CircleShape& ball, sf::Vector2f& ballSpeed) {
     ball.move(ballSpeed);
 }
 
-// Check ball collisions with borders and player
-void checkBallCollisions(sf::CircleShape& ball, sf::Vector2f& ballSpeed, int& player1Score, int& player2Score,
-    sf::Text& score1Text, sf::Text& score2Text, const sf::RectangleShape& player1, const sf::RectangleShape& player2,
-    const sf::RenderWindow& window, bool& gameOver) 
-{
-    // Detect collision with vertical borders
-	if (ball.getPosition().x + ballSpeed.x <= 0) { // If ball goes behind player 1
-        ballSpeed = { 0, 0 };
-		gameOver = true;
+// Handle collision of the ball with the top and bottom borders
+void handleBallBorderCollision(sf::CircleShape& ball, sf::Vector2f& ballSpeed) {
+    if (ball.getPosition().y <= 0 || ball.getPosition().y + ball.getRadius() * 2 >= windowHeight) {
+        ballSpeed.y = -ballSpeed.y; // Reverse the vertical direction
     }
-	else if (ball.getPosition().x + ballSpeed.x + ballRadius * 2 >= window.getSize().x) { // If ball goes behind player 2
-        ballSpeed = { 0, 0 };
-        gameOver = true;
-    }
+}
 
-    // Detect collision with horizontal borders
-    if (ball.getPosition().y + ballSpeed.y <= 0 || ball.getPosition().y + ball.getRadius() * 2 + ballSpeed.y >= window.getSize().y) 
+// Handle collision of the ball with a player paddle
+void handleBallPlayerCollision(sf::CircleShape& ball,
+                               sf::Vector2f& ballSpeed,
+                               const sf::RectangleShape& player,
+                               int& playerScore,
+                               sf::Text& scoreText)
+{   
+    // Check collision with the paddle
+    if (ball.getGlobalBounds().intersects(player.getGlobalBounds()))
     {
-        ballSpeed.y = -ballSpeed.y;
-    }
+            ballSpeed.x = -ballSpeed.x; // Reverse horizontal direction
 
-    // Detect collision with player 1
-    if (ball.getPosition().x + ballSpeed.x <= player1.getPosition().x + player1.getSize().x) {
-        if (ball.getPosition().y + ball.getRadius() * 2 + ballSpeed.y >= player1.getPosition().y && ball.getPosition().y + ballSpeed.y <= player1.getPosition().y + player1.getSize().y) {
-            
-            ballSpeed.x = -ballSpeed.x;
-            player1Score++;
-            score1Text.setString(std::to_string(player1Score));
+            // Increment the player's score
+            playerScore++;
+            scoreText.setString(std::to_string(playerScore));
 
-			float randomSpeedIncrease = 0.5f + (std::rand() % 6) / 10.0f; // Random speed increase between 0.5 and 1.1
-			ballSpeed.x += (ballSpeed.x > 0 ? randomSpeedIncrease : -randomSpeedIncrease); // Increase ball speed
+			// Increase horizontal ball speed
+            float randomSpeedIncrease = minSpeedIncrease + (std::rand() % static_cast<int>((maxSpeedIncrease - minSpeedIncrease) * 10)) / 10.0f;
+			ballSpeed.x += (ballSpeed.x > 0 ? randomSpeedIncrease : -randomSpeedIncrease); 
 
-			float playerCenterY = player1.getPosition().y + player1.getSize().y / 2.0f; // Get player center
+            // Adjust vertical ball speed based on impact position
+			float playerCenterY = player.getPosition().y + player.getSize().y / 2.0f; // Get player center
 			float ballCenterY = ball.getPosition().y + ball.getRadius(); // Get ball center
 			float relativeIntersectY = ballCenterY - playerCenterY; // Get distance between ball and player center
-
-			float normalizedIntersectY = relativeIntersectY / (player1.getSize().y / 2.0f); // Normalize distance between ball and player center between -1 and 1
+			float normalizedIntersectY = relativeIntersectY / (player.getSize().y / 2.0f); // Normalize distance between ball and player center between -1 and 1
 
 			ballSpeed.y = normalizedIntersectY * 10.0f; // Set vertical ball speed according to distance between ball and player center
-        }
 	}
-	else if (ball.getPosition().x + ballSpeed.x + ball.getRadius() * 2 >= player2.getPosition().x) { // Detect collision with player 2
-		if (ball.getPosition().y + ball.getRadius() * 2 + ballSpeed.y >= player2.getPosition().y && ball.getPosition().y + ballSpeed.y <= player2.getPosition().y + player2.getSize().y) 
-        {
-			ballSpeed.x = -ballSpeed.x;
-			player2Score++;
-			score2Text.setString(std::to_string(player2Score));
+}   
 
-            float randomSpeedIncrease = 0.5f + (std::rand() % 6) / 10.0f; // Random speed increase between 0.5 and 1.1
-            ballSpeed.x += (ballSpeed.x > 0 ? randomSpeedIncrease : -randomSpeedIncrease); // Increase ball speed
+// Check all ball collisions
+void checkBallCollisions(sf::CircleShape& ball,
+                        sf::Vector2f& ballSpeed,
+                        const sf::RectangleShape& player1,
+                        const sf::RectangleShape& player2,
+                        int& player1Score,
+                        sf::Text& score1Text,
+                        int& player2Score,
+                        sf::Text& score2Text,
+                        bool& gameOver)
+{
+    // Check collision with borders
+    handleBallBorderCollision(ball, ballSpeed);
 
-            float playerCenterY = player1.getPosition().y + player1.getSize().y / 2.0f; // Get player center
-            float ballCenterY = ball.getPosition().y + ball.getRadius(); // Get ball center
-            float relativeIntersectY = ballCenterY - playerCenterY; // Get distance between ball and player center
+    // Check if the ball goes out of bounds
+    if (ball.getPosition().x <= 0 || ball.getPosition().x + ball.getRadius() * 2 >= windowWidth) {
+        gameOver = true;
+        ballSpeed = { 0, 0 }; // Stop the ball
+        return;
+    }
 
-            float normalizedIntersectY = relativeIntersectY / (player1.getSize().y / 2.0f); // Normalize distance between ball and player center between -1 and 1
+    // Check collision with players
+    handleBallPlayerCollision(ball, ballSpeed, player1, player1Score, score1Text);
+    handleBallPlayerCollision(ball, ballSpeed, player2, player2Score, score2Text);
+}
 
-            ballSpeed.y = normalizedIntersectY * 10.0f; // Set vertical ball speed according to distance between ball and player center
-		}
-	}
-}                                                                               
-
-// Check input
-void handlePlayerInput(sf::RectangleShape& player1, sf::RectangleShape& player2, float playerSpeed) {
-	// Player 1 controls
+// Handle player input
+void handlePlayerInput(sf::RectangleShape& player1, sf::RectangleShape& player2) {
+	// Player 1 controls (W and S)
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && player1.getPosition().y - playerSpeed >= 0) {
         player1.move(0, -playerSpeed);
     }
@@ -90,7 +98,7 @@ void handlePlayerInput(sf::RectangleShape& player1, sf::RectangleShape& player2,
         player1.move(0, playerSpeed);
     }
 
-	// Player 2 controls
+    // Player 2 controls (Arrow keys)
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player2.getPosition().y - playerSpeed >= 0) {
         player2.move(0, -playerSpeed);
     }
@@ -99,87 +107,75 @@ void handlePlayerInput(sf::RectangleShape& player1, sf::RectangleShape& player2,
     }
 }
 
-// Update score text
-void updateScoreText(sf::Text& scoreText, const int playerScore, const sf::RenderWindow& window) {
-    scoreText.setString(std::to_string(playerScore));
+// Update the score text
+void updateScoreText(sf::Text& scoreText, const int score, const float xPosition) {
+    scoreText.setString(std::to_string(score));
+    scoreText.setPosition(xPosition, 10);
 }
 
+// Main function
 int main()
 {
-	// Window definition
-    sf::RenderWindow window(sf::VideoMode(1080, 750), "Pong SFML", sf::Style::Default);
+    // Create a window
+    sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), "Pong SFML");
     window.setFramerateLimit(30);
-    window.setActive(true);
 
-    // Font definition
+    // Load font
     sf::Font font;
     if (!font.loadFromFile("assets/fonts/bit5x3.ttf"))
     {
-        std::cerr << "Erreur : Impossible de charger la police assets/fonts/bit5x3.ttf" << std::endl;
+        std::cerr << "Error: Could not load font." << std::endl;
         return -1;
     }
 
-	// Game over text definition
-    sf::Text gameOverText("", font);
-    gameOverText.setCharacterSize(100);
-    gameOverText.setFillColor(sf::Color::Red);
-    gameOverText.setString("Game Over");
-    gameOverText.setPosition(window.getSize().x / 2.0f - gameOverText.getGlobalBounds().width / 2,
-        window.getSize().y / 2.0f - gameOverText.getGlobalBounds().height / 2);
-
-
-    // Score definition
-    int player1Score = 0;
-    sf::Text score1Text("", font);
-    score1Text.setCharacterSize(100);
-    updateScoreText(score1Text, player1Score, window);
-	int player2Score = 0;
-	sf::Text score2Text("", font);
-	score2Text.setCharacterSize(100);
-	updateScoreText(score2Text, player2Score, window);
-	score1Text.setPosition(window.getSize().x / 3.0f - score1Text.getGlobalBounds().width / 2, 10);
-	score2Text.setPosition(2* window.getSize().x / 3.0f + score2Text.getGlobalBounds().width / 2, 10);
-
-    // Player 1 definition
-    sf::Vector2f player1Pos = { 50.0f, window.getSize().y / 2.0f };
-    sf::RectangleShape player1(sf::Vector2f(50, playerHeight));
-    player1.setFillColor(sf::Color::White);
-    player1.setPosition(player1Pos.x, player1Pos.y);
-
-	// Player 2 definition
-	sf::Vector2f player2Pos = { window.getSize().x - 100.0f, window.getSize().y / 2.0f };
-	sf::RectangleShape player2(sf::Vector2f(50, playerHeight));
-	player2.setFillColor(sf::Color::White);
-	player2.setPosition(player2Pos.x, player2Pos.y);
-
-    // Ball definition
-    sf::CircleShape ball(ballRadius);
-    sf::Vector2f ballPos = { window.getSize().x / 2.0f, window.getSize().y / 2.0f };
-    ball.setPosition(ballPos.x, ballPos.y);
-    sf::Vector2f ballSpeed = { -10.0f, 0 };
-
-    // Game state
+    // Game state variables
     bool gameOver = false;
+
+    // Initialize scores
+    int player1Score = 0;
+    int player2Score = 0;
+
+    // Create score texts
+    sf::Text score1Text("", font, fontSize);
+    sf::Text score2Text("", font, fontSize);
+    updateScoreText(score1Text, player1Score, windowWidth / 3.0f);
+    updateScoreText(score2Text, player2Score, 2 * windowWidth / 3.0f);
+
+    // Create "Game Over" text
+    sf::Text gameOverText("Game Over", font, fontSize);
+    gameOverText.setFillColor(sf::Color::Red);
+    gameOverText.setPosition(windowWidth / 2.0f - gameOverText.getGlobalBounds().width / 2,
+        windowHeight / 2.0f - gameOverText.getGlobalBounds().height / 2);
+
+    // Create player paddles
+    sf::RectangleShape player1(sf::Vector2f(playerWidth, playerHeight));
+    player1.setPosition(50.0f, windowHeight / 2.0f - playerHeight / 2.0f);
+
+    sf::RectangleShape player2(sf::Vector2f(playerWidth, playerHeight));
+    player2.setPosition(windowWidth - 100.0f, windowHeight / 2.0f - playerHeight / 2.0f);
+
+    // Create ball
+    sf::CircleShape ball(ballRadius);
+    ball.setPosition(windowWidth / 2.0f - ballRadius, windowHeight / 2.0f - ballRadius);
+    sf::Vector2f ballSpeed(initialBallSpeedX, 0);
 
 	// Game loop
     while (window.isOpen())
     {
-        if (!gameOver) {
-            updateBallPosition(ball, ballSpeed);
-            checkBallCollisions(ball, ballSpeed, player1Score, player2Score, score1Text, score2Text, player1, player2, window, gameOver);
-            handlePlayerInput(player1, player2, playerSpeed);
-            updateScoreText(score1Text, player1Score, window);
-			updateScoreText(score2Text, player2Score, window);
-        }
-
-		// Event handling
+        // Handle events
         sf::Event event;
-        while (window.pollEvent(event))
-        {
+        while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed ||
                 (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
                 window.close();
             }
+        }
+
+        // Update game logic
+        if (!gameOver) {
+            updateBallPosition(ball, ballSpeed);
+            checkBallCollisions(ball, ballSpeed, player1, player2, player1Score, score1Text, player2Score, score2Text, gameOver);
+            handlePlayerInput(player1, player2);
         }
 
         // Render
@@ -189,12 +185,10 @@ int main()
         window.draw(player1);
 		window.draw(player2);
         window.draw(ball);
-
         if (gameOver)
         {
             window.draw(gameOverText);
         }
-
         window.display();
 
 
