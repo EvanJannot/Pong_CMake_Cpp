@@ -18,19 +18,20 @@ void updateBallPosition(sf::CircleShape& ball, sf::Vector2f& ballSpeed) {
     ball.move(ballSpeed);
 }
 
+// Check ball collisions with borders and player
 void checkBallCollisions(sf::CircleShape& ball, sf::Vector2f& ballSpeed, int& playerScore, sf::Text& scoreText, const sf::RectangleShape& player, const sf::RenderWindow& window, bool& gameOver) {
     // Detect collision with vertical borders
-    if (ball.getPosition().x + ballSpeed.x <= 0) {
+	if (ball.getPosition().x + ballSpeed.x <= 0) { // If ball goes behind player
         ballSpeed = { 0, 0 };
 		gameOver = true;
         scoreText.setString("Game Over");
     }
-    else if (ball.getPosition().x + ballSpeed.x + ballRadius * 2 >= window.getSize().x) {
+	else if (ball.getPosition().x + ballSpeed.x + ballRadius * 2 >= window.getSize().x) { // If ball goes opposite player
         ballSpeed.x = -ballSpeed.x;
     }
 
     // Detect collision with horizontal borders
-    if (ball.getPosition().y + ballSpeed.y <= 0 || ball.getPosition().y + ball.getRadius() * 2 + ballSpeed.y >= window.getSize().y)
+    if (ball.getPosition().y + ballSpeed.y <= 0 || ball.getPosition().y + ball.getRadius() * 2 + ballSpeed.y >= window.getSize().y) 
     {
         ballSpeed.y = -ballSpeed.y;
     }
@@ -42,26 +43,26 @@ void checkBallCollisions(sf::CircleShape& ball, sf::Vector2f& ballSpeed, int& pl
             playerScore++;
             scoreText.setString(std::to_string(playerScore));
 
-            float randomSpeedIncrease = 0.5f + (std::rand() % 6) / 10.0f;
-            ballSpeed.x += (ballSpeed.x > 0 ? randomSpeedIncrease : -randomSpeedIncrease);
+			float randomSpeedIncrease = 0.5f + (std::rand() % 6) / 10.0f; // Random speed increase between 0.5 and 1.1
+			ballSpeed.x += (ballSpeed.x > 0 ? randomSpeedIncrease : -randomSpeedIncrease); // Increase ball speed
 
-            float playerCenterY = player.getPosition().y + player.getSize().y / 2.0f;
-            float ballCenterY = ball.getPosition().y + ball.getRadius();
-            float relativeIntersectY = ballCenterY - playerCenterY;
+			float playerCenterY = player.getPosition().y + player.getSize().y / 2.0f; // Get player center
+			float ballCenterY = ball.getPosition().y + ball.getRadius(); // Get ball center
+			float relativeIntersectY = ballCenterY - playerCenterY; // Get distance between ball and player center
 
-            float normalizedIntersectY = relativeIntersectY / (player.getSize().y / 2.0f);
+			float normalizedIntersectY = relativeIntersectY / (player.getSize().y / 2.0f); // Normalize distance between ball and player center between -1 and 1
 
-            ballSpeed.y = normalizedIntersectY * 10.0f;
+			ballSpeed.y = normalizedIntersectY * 10.0f; // Set vertical ball speed according to distance between ball and player center
         }
     }
 }
 
 // Check input
 void handlePlayerInput(sf::RectangleShape& player, float playerSpeed) {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player.getPosition().y - playerSpeed >= 0) {
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && player.getPosition().y - playerSpeed >= 0) { // If player is not at the top of the screen
         player.move(0, -playerSpeed);
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player.getPosition().y + playerHeight + playerSpeed <= 750) {
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && player.getPosition().y + playerHeight + playerSpeed <= 750) { // If player is not at the bottom of the screen
         player.move(0, playerSpeed);
     }
 }
@@ -74,6 +75,7 @@ void updateScoreText(sf::Text& scoreText, const int playerScore, const sf::Rende
 
 int main()
 {
+	// Window definition
     sf::RenderWindow window(sf::VideoMode(1080, 750), "Pong SFML", sf::Style::Default);
     window.setFramerateLimit(30);
     window.setActive(true);
@@ -107,9 +109,9 @@ int main()
     // Game state
     bool gameOver = false;
 
+	// Game loop
     while (window.isOpen())
     {
-        // Game loop
         if (!gameOver) {
             updateBallPosition(ball, ballSpeed);
             checkBallCollisions(ball, ballSpeed, playerScore, scoreText, player, window, gameOver);
@@ -121,6 +123,7 @@ int main()
             scoreText.setPosition(window.getSize().x / 2.0f - 200, 0);
         }
 
+		// Event handling
         sf::Event event;
         while (window.pollEvent(event))
         {
